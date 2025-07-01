@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Aluno - Allay Profissões</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style_simplified.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="LuanHenrique(2).png" alt="Logo Allay Profissões" class="logo">
+                <div class="welcome-info">
+                    <span class="welcome-text" id="welcome-text">Bem-vindo(a), Aluno!</span>
+                    <span class="portal-subtitle">Portal do Aluno</span>
+                </div>
+            </div>
+            <button class="logout-btn" id="logout-button">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sair</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar - Meus Cursos -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Meus Cursos</span>
+                </h2>
+            </div>
+            
+            <div class="courses-container">
+                <div class="courses-list" id="courses-list">
+                    <!-- Loading state -->
+                    <div class="loading-courses" id="loading-courses">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <p>Carregando cursos...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content">
+            <!-- Welcome State (Initial) -->
+            <div class="welcome-state" id="welcome-state">
+                <div class="welcome-card">
+                    <div class="welcome-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h2 class="welcome-title">Bem-vindo à sua Sala de Aula Virtual!</h2>
+                    <p class="welcome-description">
+                        Selecione um curso na barra lateral para começar a sua jornada de aprendizagem.
+                        Aqui você encontrará todos os módulos, vídeos e recursos organizados para o seu sucesso.
+                    </p>
+                    <div class="welcome-features">
+                        <div class="feature-item">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Vídeos Interativos</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-book-open"></i>
+                            <span>Módulos Organizados</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Aprendizagem Eficaz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="loading-state" style="display: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Preparando sua sala de aula...</p>
+            </div>
+
+            <!-- Classroom State (After selecting a course) -->
+            <div class="classroom-state" id="classroom-state" style="display: none;">
+                <!-- Course Header -->
+                <div class="course-header">
+                    <div class="course-info">
+                        <h1 class="course-title" id="current-course-title">
+                            <i class="fas fa-book"></i>
+                            <span>Nome do Curso</span>
+                        </h1>
+                        <p class="course-description" id="current-course-description">Descrição do curso</p>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn-secondary" id="back-to-courses">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Voltar aos Cursos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Digital Board (Video Player Area) -->
+                <div class="digital-board" id="digital-board" style="display: none;">
+                    <div class="board-header">
+                        <div class="board-info">
+                            <h3 class="video-title" id="video-title-display">Título do Vídeo</h3>
+                            <p class="video-module" id="video-module-display">Módulo: Nome do Módulo</p>
+                        </div>
+                        <div class="board-controls">
+                            <button class="board-btn" id="fullscreen-btn" title="Tela Cheia">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="video-container">
+                        <div id="player" class="video-player"></div>
+                    </div>
+                    
+                    <div class="video-navigation">
+                        <button class="nav-btn nav-prev" id="prev-video-btn">
+                            <i class="fas fa-step-backward"></i>
+                            <span>Anterior</span>
+                        </button>
+                        <div class="video-info">
+                            <span class="video-counter" id="video-counter">Vídeo 1 de 5</span>
+                        </div>
+                        <button class="nav-btn nav-next" id="next-video-btn">
+                            <span>Próximo</span>
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Course Materials (Modules and Videos) -->
+                <div class="course-materials">
+                    <div class="materials-header">
+                        <h3 class="materials-title">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Material do Curso</span>
+                        </h3>
+                    </div>
+                    
+                    <div class="modules-container" id="modules-container">
+                        <!-- Modules will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Carregamento da API do YouTube (fora do módulo) -->
+    <script>
+        // Variáveis globais para o YouTube Player
+        let player;
+        let isYouTubeAPIReady = false;
+        
+        // Variáveis globais para controle de navegação
+        let currentCourseId = null;
+        let currentPlayingModuleIndex = -1;
+        let currentPlayingVideoIndex = -1;
+        let currentCourseModules = [];
+        window.currentCourseModules = []; // Para acesso global
+        window.currentCourseId = null; // Para acesso global
+        window.currentPlayingModuleIndex = -1; // Para acesso global
+        window.currentPlayingVideoIndex = -1; // Para acesso global
+
+        // Função global chamada pela API do YouTube quando carregada
+        function onYouTubeIframeAPIReady() {
+            isYouTubeAPIReady = true;
+            console.log('YouTube API carregada com sucesso');
+        }
+
+        // Função para extrair o ID do YouTube de uma URL
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            
+            // Padrões de URL do YouTube
+            const patterns = [
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/i,
+                /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/i,
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            
+            return null;
+        }
+
+        // Função global para carregar vídeo do YouTube
+        function loadYouTubeVideo(videoUrl) {
+            if (!isYouTubeAPIReady) {
+                console.error('API do YouTube ainda não carregada');
+                return;
+            }
+
+            // Extrai o ID do YouTube da URL
+            const videoId = extractYouTubeId(videoUrl);
+            
+            if (!videoId) {
+                console.error('ID do YouTube não encontrado na URL:', videoUrl);
+                return;
+            }
+            
+            console.log('Carregando vídeo do YouTube:', videoId);
+
+            if (player) {
+                // Se o player já existe, carrega o novo vídeo
+                player.loadVideoById(videoId);
+            } else {
+                // Cria um novo player
+                player = new YT.Player('player', {
+                    videoId: videoId,
+                    playerVars: {
+                        'autoplay': 1,
+                        'rel': 0,
+                        'modestbranding': 1,
+                        'origin': window.location.origin
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+        }
+
+        function onPlayerReady(event) {
+            console.log('Player pronto');
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            console.log('Estado do player mudou:', event.data);
+            if (event.data === YT.PlayerState.ENDED) {
+                console.log('Vídeo terminou.');
+                // Marcar vídeo como assistido
+                markVideoAsWatched();
+                updateVideoCounter();
+            }
+        }
+
+        // Carrega o script da API do YouTube
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+
+    <!-- Sistema de Progresso JS -->
+    <script src="progress-system-firestore.js"></script>
+    <script src="progress-integration-firestore.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIwBp15jP3iXCxftfwZuFFO6y2qoFYrNA",
+            authDomain: "allayproject-a9ccc.firebaseapp.com",
+            projectId: "allayproject-a9ccc",
+            storageBucket: "allayproject-a9ccc.firebasestorage.app",
+            messagingSenderId: "712124423347",
+            appId: "1:712124423347:web:557a5d70f9f2a60edde4c6",
+            measurementId: "G-R1E8NRN4R6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const firestore = firebase.firestore();
+
+        // Elementos DOM
+        const welcomeText = document.getElementById("welcome-text");
+        const logoutButton = document.getElementById("logout-button");
+        const backToCoursesBtn = document.getElementById("back-to-courses");
+
+        // Variáveis para controle
+        let currentUser = null;
+        window.currentUser = null; // Para acesso global
+
+        // Função para calcular o progresso de um curso
+        async function calculateCourseProgress(courseId, userEmail) {
+            try {
+                // Buscar dados do curso
+                const courseDoc = await firestore.collection("courses").doc(courseId).get();
+                if (!courseDoc.exists) return 0;
+
+                const courseData = courseDoc.data();
+                const modules = courseData.modules || [];
+                
+                // Contar total de vídeos
+                let totalVideos = 0;
+                modules.forEach(module => {
+                    if (module.videos && Array.isArray(module.videos)) {
+                        totalVideos += module.videos.length;
+                    }
+                });
+
+                if (totalVideos === 0) return 0;
+
+                // Buscar progresso do usuário
+                const progressDoc = await firestore
+                    .collection("userProgress")
+                    .doc(userEmail)
+                    .collection("courses")
+                    .doc(courseId)
+                    .get();
+
+                let watchedVideos = 0;
+                if (progressDoc.exists) {
+                    const progressData = progressDoc.data();
+                    watchedVideos = (progressData.watchedVideos || []).length;
+                }
+
+                // Calcular porcentagem
+                const percentage = Math.round((watchedVideos / totalVideos) * 100);
+                return percentage;
+            } catch (error) {
+                console.error("Erro ao calcular progresso:", error);
+                return 0;
+            }
+        }
+
+        // Função para marcar vídeo como assistido
+        async function markVideoAsWatched() {
+            if (!currentUser || !currentCourseId || currentPlayingModuleIndex === -1 || currentPlayingVideoIndex === -1) {
+                return;
+            }
+
+            try {
+                const userEmail = currentUser.email;
+                const moduleIndex = currentPlayingModuleIndex;
+                const videoIndex = currentPlayingVideoIndex;
+                const videoId = `${moduleIndex}_${videoIndex}`;
+
+                const progressRef = firestore
+                    .collection("userProgress")
+                    .doc(userEmail)
+                    .collection("courses")
+                    .doc(currentCourseId);
+
+                // Buscar progresso atual
+                const progressDoc = await progressRef.get();
+                let watchedVideos = [];
+                
+                if (progressDoc.exists) {
+                    watchedVideos = progressDoc.data().watchedVideos || [];
+                }
+
+                // Adicionar vídeo se não estiver na lista
+                if (!watchedVideos.includes(videoId)) {
+                    watchedVideos.push(videoId);
+                    
+                    await progressRef.set({
+                        watchedVideos: watchedVideos,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    console.log(`Vídeo ${videoId} marcado como assistido`);
+                    
+                    // Atualizar barra de progresso
+                    updateCourseProgressBar(currentCourseId);
+                }
+            } catch (error) {
+                console.error("Erro ao marcar vídeo como assistido:", error);
+            }
+        }
+
+        // Função para atualizar a barra de progresso de um curso
+        async function updateCourseProgressBar(courseId) {
+            if (!currentUser) return;
+
+            const percentage = await calculateCourseProgress(courseId, currentUser.email);
+            const courseItem = document.querySelector(`[data-course-id="${courseId}"]`);
+            
+            if (courseItem) {
+                const progressBar = courseItem.querySelector('.course-progress-bar');
+                const progressText = courseItem.querySelector('.course-progress-text');
+                
+                if (progressBar && progressText) {
+                    progressBar.style.width = `${percentage}%`;
+                    progressText.textContent = `${percentage}%`;
+                }
+            }
+        }
+
+        // Função para carregar os cursos do Firestore
+        async function loadCourses(userEmail) {
+            try {
+                const studentDocRef = firestore.collection("students").doc(userEmail);
+                const studentDocSnap = await studentDocRef.get();
+
+                if (!studentDocSnap.exists) {
+                    console.log("Nenhum documento de estudante encontrado para o e-mail:", userEmail);
+                    displayNoCoursesMessage();
+                    return;
+                }
+
+                const studentData = studentDocSnap.data();
+                const assignedCourses = studentData.assignedCourses || [];
+
+                if (assignedCourses.length === 0) {
+                    displayNoCoursesMessage();
+                    return;
+                }
+
+                const coursesList = document.getElementById("courses-list");
+                coursesList.innerHTML = ""; // Limpa a lista existente
+
+                for (const courseId of assignedCourses) {
+                    const courseDocRef = firestore.collection("courses").doc(courseId);
+                    const courseDocSnap = await courseDocRef.get();
+
+                    if (courseDocSnap.exists) {
+                        const courseData = courseDocSnap.data();
+                        const courseItem = document.createElement("div");
+                        courseItem.classList.add("course-item");
+                        courseItem.dataset.courseId = courseDocSnap.id;
+                        const courseName = courseData.name || courseDocSnap.id;
+                        
+                        // Calcular progresso
+                        const progress = await calculateCourseProgress(courseDocSnap.id, userEmail);
+                        
+                        courseItem.innerHTML = `
+                            <div class="course-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="course-details">
+                                <h3 class="course-name">${courseName}</h3>
+                                <p class="course-desc">${courseData.description || "Curso disponível"}</p>
+                                <div class="course-progress">
+                                    <div class="course-progress-info">
+                                        <span class="course-progress-label">Progresso:</span>
+                                        <span class="course-progress-text">${progress}%</span>
+                                    </div>
+                                    <div class="course-progress-container">
+                                        <div class="course-progress-bar" style="width: ${progress}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="course-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        `;
+                        
+                        courseItem.addEventListener("click", () => {
+                            selectCourse(courseDocSnap.id, courseName);
+                        });
+                        
+                        coursesList.appendChild(courseItem);
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar cursos: ", error);
+                alert("Erro ao carregar cursos. Verifique o console para mais detalhes.");
+            }
+        }
+
+        function displayNoCoursesMessage() {
+            const coursesList = document.getElementById("courses-list");
+            coursesList.innerHTML = `
+                <div class="no-courses">
+                    <i class="fas fa-book"></i>
+                    <p>Nenhum curso atribuído a você.</p>
+                </div>
+            `;
+        }
+
+        // Função para selecionar um curso e carregar seus módulos
+        async function selectCourse(courseId, courseName) {
+            currentCourseId = courseId;
+            window.currentCourseId = courseId; // Para acesso global
+            
+            console.log('Curso selecionado:', courseId, courseName);
+            
+            // Update active course
+            const courseItems = document.querySelectorAll(".course-item");
+            courseItems.forEach(item => item.classList.remove("active"));
+            const selectedCourseItem = document.querySelector(`[data-course-id="${courseId}"]`);
+            if (selectedCourseItem) {
+                selectedCourseItem.classList.add("active");
+            }
+
+            // Show loading state
+            document.getElementById("welcome-state").style.display = "none";
+            document.getElementById("loading-state").style.display = "flex";
+            document.getElementById("classroom-state").style.display = "none";
+
+            try {
+                // Fetch course data from Firestore
+                const courseDocRef = firestore.collection("courses").doc(courseId);
+                const courseDocSnap = await courseDocRef.get();
+
+                if (!courseDocSnap.exists) {
+                    console.error("Curso não encontrado:", courseId);
+                    alert("Curso não encontrado.");
+                    return;
+                }
+
+                const courseData = courseDocSnap.data();
+                console.log('Dados do curso:', courseData);
+
+                // Update course header
+                document.getElementById("current-course-title").innerHTML = `
+                    <i class="fas fa-book"></i>
+                    <span>${courseName}</span>
+                `;
+                document.getElementById("current-course-description").textContent = courseData.description || "Descrição não disponível";
+
+                // Load modules
+                await loadModules(courseData.modules || []);
+
+                // Show classroom state
+                document.getElementById("loading-state").style.display = "none";
+                document.getElementById("classroom-state").style.display = "block";
+
+            } catch (error) {
+                console.error("Erro ao carregar curso:", error);
+                alert("Erro ao carregar curso. Verifique o console para mais detalhes.");
+                
+                // Return to welcome state on error
+                document.getElementById("loading-state").style.display = "none";
+                document.getElementById("welcome-state").style.display = "flex";
+            }
+        }
+
+        // Função para carregar módulos
+        async function loadModules(modules) {
+            const modulesContainer = document.getElementById("modules-container");
+            modulesContainer.innerHTML = "";
+            
+            currentCourseModules = modules;
+            window.currentCourseModules = modules; // Para acesso global
+
+            if (!modules || modules.length === 0) {
+                modulesContainer.innerHTML = `
+                    <div class="no-modules">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Nenhum módulo disponível para este curso.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            modules.forEach((module, moduleIndex) => {
+                const moduleElement = document.createElement("div");
+                moduleElement.classList.add("module-item");
+                moduleElement.dataset.moduleIndex = moduleIndex;
+
+                const videos = module.videos || [];
+                const videoCount = videos.length;
+
+                moduleElement.innerHTML = `
+                    <div class="module-header" onclick="toggleModule(${moduleIndex})">
+                        <div class="module-info">
+                            <div class="module-icon">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                            <div>
+                                <h4 class="module-title">${module.name || `Módulo ${moduleIndex + 1}`}</h4>
+                                <p class="module-count">${videoCount} vídeo${videoCount !== 1 ? 's' : ''}</p>
+                            </div>
+                        </div>
+                        <div class="module-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="videos-list">
+                        ${videos.map((video, videoIndex) => `
+                            <div class="video-item" onclick="playVideo(${moduleIndex}, ${videoIndex})">
+                                <div class="video-icon">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                                <div class="video-details">
+                                    <h5 class="video-title">${video.title || `Vídeo ${videoIndex + 1}`}</h5>
+                                    <p class="video-duration">${video.duration || 'Duração não informada'}</p>
+                                </div>
+                                <div class="video-status">
+                                    <i class="fas fa-circle"></i>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                modulesContainer.appendChild(moduleElement);
+            });
+        }
+
+        // Função para alternar módulo (expandir/recolher)
+        function toggleModule(moduleIndex) {
+            const moduleElement = document.querySelector(`[data-module-index="${moduleIndex}"]`);
+            if (moduleElement) {
+                moduleElement.classList.toggle("expanded");
+            }
+        }
+
+        // Função para reproduzir vídeo
+        function playVideo(moduleIndex, videoIndex) {
+            console.log(`Reproduzindo vídeo: Módulo ${moduleIndex}, Vídeo ${videoIndex}`);
+            
+            // Update global variables
+            currentPlayingModuleIndex = moduleIndex;
+            currentPlayingVideoIndex = videoIndex;
+            window.currentPlayingModuleIndex = moduleIndex;
+            window.currentPlayingVideoIndex = videoIndex;
+
+            const module = currentCourseModules[moduleIndex];
+            const video = module.videos[videoIndex];
+
+            if (!video || !video.url) {
+                console.error("URL do vídeo não encontrada");
+                alert("URL do vídeo não encontrada");
+                return;
+            }
+
+            // Update video info in the board
+            document.getElementById("video-title-display").textContent = video.title || `Vídeo ${videoIndex + 1}`;
+            document.getElementById("video-module-display").textContent = `Módulo: ${module.name || `Módulo ${moduleIndex + 1}`}`;
+
+            // Update active video
+            document.querySelectorAll(".video-item").forEach(item => item.classList.remove("active"));
+            const videoItems = document.querySelectorAll(".video-item");
+            let globalVideoIndex = 0;
+            for (let i = 0; i < moduleIndex; i++) {
+                globalVideoIndex += currentCourseModules[i].videos.length;
+            }
+            globalVideoIndex += videoIndex;
+            
+            if (videoItems[globalVideoIndex]) {
+                videoItems[globalVideoIndex].classList.add("active");
+            }
+
+            // Show digital board
+            document.getElementById("digital-board").style.display = "block";
+
+            // Load YouTube video
+            loadYouTubeVideo(video.url);
+
+            // Update video counter
+            updateVideoCounter();
+        }
+
+        // Função para atualizar contador de vídeos
+        function updateVideoCounter() {
+            if (currentPlayingModuleIndex === -1 || currentPlayingVideoIndex === -1) return;
+
+            let totalVideos = 0;
+            let currentVideoNumber = 0;
+
+            // Count total videos and current video position
+            for (let i = 0; i < currentCourseModules.length; i++) {
+                const moduleVideos = currentCourseModules[i].videos.length;
+                totalVideos += moduleVideos;
+                
+                if (i < currentPlayingModuleIndex) {
+                    currentVideoNumber += moduleVideos;
+                } else if (i === currentPlayingModuleIndex) {
+                    currentVideoNumber += currentPlayingVideoIndex + 1;
+                }
+            }
+
+            document.getElementById("video-counter").textContent = `Vídeo ${currentVideoNumber} de ${totalVideos}`;
+
+            // Update navigation buttons
+            const prevBtn = document.getElementById("prev-video-btn");
+            const nextBtn = document.getElementById("next-video-btn");
+
+            prevBtn.disabled = currentVideoNumber === 1;
+            nextBtn.disabled = currentVideoNumber === totalVideos;
+        }
+
+        // Função para navegar para o próximo vídeo
+        function navigateToNextVideo() {
+            if (currentPlayingModuleIndex === -1 || currentPlayingVideoIndex === -1) return;
+
+            let nextModuleIndex = currentPlayingModuleIndex;
+            let nextVideoIndex = currentPlayingVideoIndex + 1;
+
+            // Se chegou ao final do módulo atual, vai para o próximo módulo
+            if (nextVideoIndex >= currentCourseModules[nextModuleIndex].videos.length) {
+                nextModuleIndex++;
+                nextVideoIndex = 0;
+            }
+
+            // Se chegou ao final de todos os módulos, não faz nada
+            if (nextModuleIndex >= currentCourseModules.length) {
+                console.log("Já está no último vídeo");
+                return;
+            }
+
+            // Reproduz o próximo vídeo
+            playVideo(nextModuleIndex, nextVideoIndex);
+        }
+
+        // Função para navegar para o vídeo anterior
+        function navigateToPreviousVideo() {
+            if (currentPlayingModuleIndex === -1 || currentPlayingVideoIndex === -1) return;
+
+            let prevModuleIndex = currentPlayingModuleIndex;
+            let prevVideoIndex = currentPlayingVideoIndex - 1;
+
+            // Se chegou ao início do módulo atual, vai para o módulo anterior
+            if (prevVideoIndex < 0) {
+                prevModuleIndex--;
+                if (prevModuleIndex >= 0) {
+                    prevVideoIndex = currentCourseModules[prevModuleIndex].videos.length - 1;
+                }
+            }
+
+            // Se chegou ao início de todos os módulos, não faz nada
+            if (prevModuleIndex < 0) {
+                console.log("Já está no primeiro vídeo");
+                return;
+            }
+
+            // Reproduz o vídeo anterior
+            playVideo(prevModuleIndex, prevVideoIndex);
+        }
+
+        // Navigation functions
+        document.getElementById("prev-video-btn").addEventListener("click", () => {
+            navigateToPreviousVideo();
+        });
+
+        document.getElementById("next-video-btn").addEventListener("click", () => {
+            navigateToNextVideo();
+        });
+
+        // Back to courses button
+        backToCoursesBtn.addEventListener("click", () => {
+            document.getElementById("classroom-state").style.display = "none";
+            document.getElementById("welcome-state").style.display = "flex";
+            
+            // Clear active course
+            document.querySelectorAll(".course-item").forEach(item => item.classList.remove("active"));
+            currentCourseId = null;
+            window.currentCourseId = null;
+        });
+
+        // Logout functionality
+        logoutButton.addEventListener("click", () => {
+            auth.signOut().then(() => {
+                localStorage.removeItem("loggedInUserEmail");
+                window.location.href = "login.html";
+            }).catch((error) => {
+                console.error("Erro ao fazer logout:", error);
+            });
+        });
+
+       auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        window.currentUser = user; // global
+        console.log("Usuário autenticado:", user.email);
+
+        // buscar no Firestore o nome do usuário
+        const db = firebase.firestore();
+        db.collection("students")
+          .where("email", "==", user.email)
+          .get()
+          .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+              querySnapshot.forEach((doc) => {
+                const nome = doc.data().name;
+                welcomeText.textContent = `Bem-vindo(a), ${nome}!`;
+              });
+            } else {
+              welcomeText.textContent = `Bem-vindo(a), ${user.email}!`; // fallback
+            }
+          })
+          .catch((error) => {
+            console.error("Erro ao buscar nome no Firestore:", error);
+            welcomeText.textContent = `Bem-vindo(a), ${user.email}!`; // fallback
+          });
+
+        // Load courses for this user
+        loadCourses(user.email);
+    } else {
+        console.log("Usuário não autenticado");
+        window.location.href = "login.html";
+    }
+});
+
+    </script>
+</body>
+</html>
+

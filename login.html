@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Allay Profissões</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Ubuntu", sans-serif;
+            background: linear-gradient(135deg, #04000e 0%, #002929 50%, #004040 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Efeito de partículas de fundo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 242, 254, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .login-title {
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-family: "Commissioner", serif;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+            z-index: 2;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: "Ubuntu", sans-serif;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            font-family: "Ubuntu", sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 1.5rem;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .back-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            color: #4facfe;
+            transform: translateX(-5px);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+                max-width: 400px;
+            }
+
+            .login-title {
+                font-size: 1.8rem;
+            }
+
+            .back-link {
+                top: 1rem;
+                left: 1rem;
+                font-size: 1rem;
+            }
+
+            .form-input {
+                padding: 12px 12px 12px 45px;
+            }
+
+            .form-group i {
+                left: 12px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .login-container {
+                padding: 1.5rem 1rem;
+                margin: 0.5rem;
+                border-radius: 15px;
+            }
+
+            .logo {
+                width: 90px;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+
+            .login-subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 2rem;
+            }
+
+            .form-input {
+                padding: 12px 10px 12px 40px;
+                font-size: 0.9rem;
+            }
+
+            .form-group i {
+                left: 10px;
+                font-size: 0.9rem;
+            }
+
+            .login-button {
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            .back-link {
+                font-size: 0.9rem;
+                top: 0.5rem;
+                left: 0.5rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 1rem 0.8rem;
+            }
+
+            .logo {
+                width: 80px;
+            }
+
+            .login-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+    <script>
+        if (performance.navigation.type === 2) {
+            // alert("Erro: Não é possível voltar para a página de login."); // Comentado para evitar pop-up desnecessário
+            // window.location.replace("index.html"); // Redirecionamento para index.html não é o desejado aqui
+        }
+    </script>
+</head>
+<body>
+    <a href="index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Voltar ao Início
+    </a>
+
+    <div class="login-container">
+        <div class="logo-container">
+            <img src="LuanHenrique(2).png" alt="Allay Profissões" class="logo">
+        </div>
+        
+        <h1 class="login-title">Bem-vindo de volta!</h1>
+        <p class="login-subtitle">Faça login para acessar sua conta</p>
+        
+        <form onsubmit="return false;">
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" class="form-input" placeholder="Seu e-mail" required>
+            </div>
+            
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" class="form-input" placeholder="Sua senha" required>
+            </div>
+            
+            <button type="button" class="login-button" onclick="login()">
+                Entrar na Plataforma
+            </button>
+        </form>
+        
+        <div id="message" class="message"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIwBp15jP3iXCxftfwZuFFO6y2qoFYrNA",
+            authDomain: "allayproject-a9ccc.firebaseapp.com",
+            databaseURL: "https://allayproject-a9ccc-default-rtdb.firebaseio.com",
+            projectId: "allayproject-a9ccc",
+            storageBucket: "allayproject-a9ccc.firebasestorage.app",
+            messagingSenderId: "712124423347",
+            appId: "1:712124423347:web:557a5d70f9f2a60edde4c6",
+            measurementId: "G-R1E8NRN4R6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.login = function () {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
+
+            if (!email || !password) {
+                showMessage("Por favor, preencha todos os campos.", "error");
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Login bem-sucedido
+                    const user = userCredential.user;
+                    console.log("Login bem-sucedido:", user.email);
+                    localStorage.setItem("loggedInUserEmail", user.email); // Salva o email do usuário logado
+                    showMessage("Login realizado com sucesso! Redirecionando...", "success");
+                    
+                    // Redirecionamento imediato e mais confiável
+                    setTimeout(() => {
+                        console.log("Redirecionando para menualuno.html");
+                        window.location.replace("menualuno.html"); // Usa replace para evitar voltar
+                    }, 1500);
+                })
+                .catch((error) => {
+                    let errorMessage = "Erro ao fazer login. Tente novamente.";
+                    
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage = "Usuário não encontrado.";
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage = "Senha incorreta.";
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = "E-mail inválido.";
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMessage = "Muitas tentativas. Tente novamente mais tarde.";
+                            break;
+                    }
+                    
+                    showMessage(errorMessage, "error");
+                });
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById("message");
+            message.textContent = text;
+            message.className = `message ${type} show`;
+            
+            setTimeout(() => {
+                message.classList.remove("show");
+            }, 5000);
+        }
+
+        // Permitir login com Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
+

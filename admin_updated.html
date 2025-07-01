@@ -1,0 +1,2565 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Allay Profissões</title>
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Color Palette */
+            --primary-bg: #0F172A;
+            --secondary-bg: #1E293B;
+            --tertiary-bg: #334155;
+            --accent-blue: #3B82F6;
+            --accent-blue-hover: #2563EB;
+            --success-green: #10B981;
+            --warning-yellow: #F59E0B;
+            --error-red: #EF4444;
+            --text-primary: #F8FAFC;
+            --text-secondary: #CBD5E1;
+            --text-muted: #64748B;
+            --border-color: #475569;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.25);
+            --shadow-heavy: rgba(0, 0, 0, 0.4);
+            
+            /* Typography */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== LAYOUT ===== */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .sidebar-logo i {
+            font-size: var(--font-size-2xl);
+            color: var(--accent-blue);
+        }
+
+        .sidebar-title {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .sidebar-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            padding: var(--spacing-lg) 0;
+        }
+
+        .nav-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .nav-section-title {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 var(--spacing-xl);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md) var(--spacing-xl);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+            margin-right: var(--spacing-md);
+        }
+
+        .nav-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(90deg, var(--accent-blue) 0%, rgba(59, 130, 246, 0.8) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-icon {
+            font-size: var(--font-size-lg);
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content-wrapper {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .page-title {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: var(--font-size-sm);
+            color: var(--text-muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--font-size-lg);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--error-red);
+            color: white;
+            font-size: var(--font-size-xs);
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--tertiary-bg);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: var(--border-color);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+        }
+
+        /* ===== CONTENT AREA ===== */
+        .content-area {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: 0 4px 6px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .card-title i {
+            color: var(--accent-blue);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* ===== FORMS ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: var(--font-size-base);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: var(--secondary-bg);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-green) 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-red) 0%, #DC2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-yellow) 0%, #D97706 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--font-size-xs);
+        }
+
+        .btn-lg {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            font-size: var(--font-size-lg);
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table th {
+            background: var(--tertiary-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .table td {
+            color: var(--text-secondary);
+        }
+
+        .table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* ===== MODULES & VIDEOS ===== */
+        .module-container {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .module-container:hover {
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-lg);
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .module-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .module-title i {
+            color: var(--accent-blue);
+        }
+
+        .module-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .module-content {
+            padding: var(--spacing-lg);
+        }
+
+        .video-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.3s ease;
+        }
+
+        .video-item:hover {
+            background: var(--tertiary-bg);
+        }
+
+        .video-item input {
+            flex: 1;
+            margin: 0;
+            background: var(--primary-bg);
+        }
+
+        .video-title-input {
+            max-width: 200px;
+        }
+
+        .video-url-input {
+            flex: 2;
+        }
+
+        /* ===== MESSAGES ===== */
+        .message {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-lg);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .message.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-yellow);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* ===== STUDENT LIST ===== */
+        .student-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-lg);
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.3s ease;
+        }
+
+        .student-item:hover {
+            background: var(--secondary-bg);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+
+        .student-info {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .student-email {
+            font-size: var(--font-size-sm);
+            color: var(--text-muted);
+        }
+
+        .student-course {
+            font-size: var(--font-size-sm);
+            color: var(--accent-blue);
+            margin-top: var(--spacing-xs);
+        }
+
+        .student-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-2xl);
+            min-width: 400px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: flex-end;
+            margin-top: var(--spacing-xl);
+        }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px var(--shadow-medium);
+        }
+
+        .stat-icon {
+            font-size: var(--font-size-3xl);
+            color: var(--accent-blue);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .stat-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content-wrapper {
+                margin-left: 0;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: var(--spacing-md);
+            }
+
+            .content-area {
+                padding: var(--spacing-md);
+            }
+
+            .card {
+                padding: var(--spacing-lg);
+            }
+
+            .page-title {
+                font-size: var(--font-size-xl);
+            }
+
+            .modal-content {
+                margin: var(--spacing-md);
+                min-width: auto;
+            }
+
+            .student-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .student-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* ===== LOADING STATES ===== */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--accent-blue);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SCROLLBAR STYLING ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== CHECKBOX STYLING ===== */
+        .course-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-sm);
+            background: var(--secondary-bg);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .course-checkbox-item:hover {
+            background: var(--primary-bg);
+            border-color: var(--accent-blue);
+        }
+
+        .course-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .course-checkbox-label {
+            flex: 1;
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .course-checkbox-item.checked {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .course-checkbox-item.checked .course-checkbox-label {
+            color: var(--accent-blue);
+        }
+
+        /* ===== DISABLED STUDENT STYLES ===== */
+        .student-item.disabled {
+            opacity: 0.6;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .student-name.disabled {
+            color: var(--error-red) !important;
+            font-weight: 600;
+        }
+
+        .student-item.disabled .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .student-item.disabled .btn:not(:disabled) {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h1 class="sidebar-title">Allay Admin</h1>
+                <p class="sidebar-subtitle">Painel de Controle</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Gestão</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" data-section="dashboard">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="courses">
+                                <i class="nav-icon fas fa-book"></i>
+                                Cursos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="enrollment">
+                                <i class="nav-icon fas fa-user-plus"></i>
+                                Matrículas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="students">
+                                <i class="nav-icon fas fa-users"></i>
+                                Alunos
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Sistema</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="settings">
+                                <i class="nav-icon fas fa-cog"></i>
+                                Configurações
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="analytics">
+                                <i class="nav-icon fas fa-chart-bar"></i>
+                                Relatórios
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content-wrapper">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title" id="page-title">Dashboard</h1>
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i>
+                        <span>/ <span id="breadcrumb-current">Dashboard</span></span>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                    </div>
+                    
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">Administrador</div>
+                            <div class="user-role">Super Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="stat-value" id="total-courses">0</div>
+                            <div class="stat-label">Total de Cursos</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value" id="total-students">0</div>
+                            <div class="stat-label">Alunos Ativos</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                            <div class="stat-value" id="total-videos">0</div>
+                            <div class="stat-label">Vídeos Disponíveis</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-value">98%</div>
+                            <div class="stat-label">Taxa de Satisfação</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Visão Geral do Sistema
+                            </h3>
+                        </div>
+                        <p style="color: var(--text-secondary); line-height: 1.6;">
+                            Bem-vindo ao painel administrativo da Allay Profissões. Aqui você pode gerenciar cursos, 
+                            alunos, matrículas e acompanhar o desempenho da plataforma. Use o menu lateral para 
+                            navegar entre as diferentes seções do sistema.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Courses Section -->
+                <div id="courses" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-plus-circle"></i>
+                                Criar Novo Curso
+                            </h3>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="course-name-input">Nome do Curso</label>
+                            <input type="text" id="course-name-input" class="form-input" placeholder="Ex: Curso de Desenvolvimento Web">
+                        </div>
+                        <button class="btn btn-primary" id="add-course-button">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Curso
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-edit"></i>
+                                Editar Curso Existente
+                            </h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="course-select">Selecionar Curso</label>
+                                <select id="course-select" class="form-select">
+                                    <option value="">Escolha um curso...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" id="select-course-button">
+                                <i class="fas fa-download"></i>
+                                Carregar Curso
+                            </button>
+                            <button class="btn btn-danger" id="delete-course-button">
+                                <i class="fas fa-trash"></i>
+                                Excluir Curso
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-layer-group"></i>
+                                Módulos e Vídeos: <span id="current-course-name" style="color: var(--accent-blue);">Nenhum Curso Selecionado</span>
+                            </h3>
+                            <div class="card-actions">
+                                <button class="btn btn-primary" id="add-module-button">
+                                    <i class="fas fa-plus"></i>
+                                    Adicionar Módulo
+                                </button>
+                                <button class="btn btn-success" id="save-course-data">
+                                    <i class="fas fa-save"></i>
+                                    Salvar Curso
+                                </button>
+                            </div>
+                        </div>
+                        <div id="modules-container">
+                            <!-- Modules will be dynamically added here -->
+                        </div>
+                        <div id="courses-message" class="message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Enrollment Section -->
+                <div id="enrollment" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-user-plus"></i>
+                                Cadastrar Novo Aluno
+                            </h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="student-name-input">Nome Completo</label>
+                                <input type="text" id="student-name-input" class="form-input" placeholder="Ex: João Silva Santos">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="student-email-input">Email</label>
+                                <input type="email" id="student-email-input" class="form-input" placeholder="Ex: joao@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="student-password-input">Senha</label>
+                                <input type="password" id="student-password-input" class="form-input" placeholder="Mínimo 6 caracteres">
+                            </div>
+                        </div>
+                        <button class="btn btn-success" id="add-student-button">
+                            <i class="fas fa-user-plus"></i>
+                            Cadastrar Aluno
+                        </button>
+                        <div id="enrollment-message" class="message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Students Section -->
+                <div id="students" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-users"></i>
+                                Lista de Alunos
+                            </h3>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary" onclick="loadStudents()">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Atualizar Lista
+                                </button>
+                            </div>
+                        </div>
+                        <div id="students-list" class="student-list">
+                            <!-- Students will be dynamically added here -->
+                        </div>
+                        <div id="students-message" class="message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-cog"></i>
+                                Configurações do Sistema
+                            </h3>
+                        </div>
+                        <p style="color: var(--text-secondary);">
+                            Seção em desenvolvimento. Aqui você poderá configurar parâmetros gerais do sistema, 
+                            notificações, integrações e outras configurações avançadas.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="analytics" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Relatórios e Analytics
+                            </h3>
+                        </div>
+                        <p style="color: var(--text-secondary);">
+                            Seção em desenvolvimento. Aqui você poderá visualizar relatórios detalhados sobre 
+                            o desempenho dos alunos, estatísticas de uso da plataforma e métricas de engajamento.
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Course Assignment -->
+    <div id="assign-course-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Atribuir Curso ao Aluno</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                Aluno: <strong id="modal-student-name" style="color: var(--text-primary);"></strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label" for="modal-course-select">Selecionar Curso</label>
+                <select id="modal-course-select" class="form-select">
+                    <option value="">Escolha um curso...</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-success" id="assign-course-confirm">
+                    <i class="fas fa-check"></i>
+                    Atribuir Curso
+                </button>
+                <button class="btn btn-secondary" id="assign-course-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Multiple Course Assignment -->
+    <div id="assign-multiple-courses-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Atribuir Múltiplos Cursos ao Aluno</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                Aluno: <strong id="modal-multiple-student-name" style="color: var(--text-primary);"></strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label">Selecionar Cursos (marque quantos desejar)</label>
+                <div id="multiple-courses-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-md); background: var(--tertiary-bg);">
+                    <!-- Courses checkboxes will be dynamically added here -->
+                </div>
+            </div>
+            <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--tertiary-bg); border-radius: var(--radius-md);">
+                <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin: 0;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-blue);"></i>
+                    Você pode selecionar quantos cursos quiser. Os cursos selecionados serão adicionados à lista de cursos do aluno.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-success" id="assign-multiple-courses-confirm">
+                    <i class="fas fa-check"></i>
+                    Atribuir Cursos Selecionados
+                </button>
+                <button class="btn btn-secondary" id="assign-multiple-courses-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Student Edit -->
+    <div id="edit-student-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Dados do Aluno</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                Editando aluno: <strong id="edit-modal-student-email" style="color: var(--text-primary);"></strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label" for="edit-student-name">Nome Completo</label>
+                <input type="text" id="edit-student-name" class="form-input" placeholder="Ex: João Silva Santos">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="edit-student-email">Email</label>
+                <input type="email" id="edit-student-email" class="form-input" placeholder="Ex: joao@email.com">
+                <small style="color: var(--text-muted); font-size: var(--font-size-xs); margin-top: var(--spacing-xs); display: block;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning-yellow);"></i>
+                    Alterar o email pode afetar o login do aluno. Use com cuidado.
+                </small>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="edit-student-password">Nova Senha (opcional)</label>
+                <input type="password" id="edit-student-password" class="form-input" placeholder="Deixe em branco para manter a senha atual">
+                <small style="color: var(--text-muted); font-size: var(--font-size-xs); margin-top: var(--spacing-xs); display: block;">
+                    Mínimo 6 caracteres. Deixe em branco se não quiser alterar a senha.
+                </small>
+            </div>
+            <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--tertiary-bg); border-radius: var(--radius-md);">
+                <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin: 0;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-blue);"></i>
+                    As alterações serão salvas no banco de dados. Certifique-se de que os dados estão corretos antes de confirmar.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-warning" id="edit-student-confirm">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+                <button class="btn btn-secondary" id="edit-student-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Remove Course -->
+    <div id="remove-course-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Remover Curso do Aluno</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                Aluno: <strong id="remove-modal-student-name" style="color: var(--text-primary);"></strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label">Selecionar Cursos para Remover</label>
+                <div id="remove-courses-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-md); background: var(--tertiary-bg);">
+                    <!-- Student's courses checkboxes will be dynamically added here -->
+                </div>
+            </div>
+            <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--error-red); border-radius: var(--radius-md); opacity: 0.1;">
+                <p style="color: var(--text-primary); font-size: var(--font-size-sm); margin: 0;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning-yellow);"></i>
+                    Atenção: Esta ação removerá permanentemente os cursos selecionados do aluno. Esta operação não pode ser desfeita.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="remove-course-confirm">
+                    <i class="fas fa-minus-circle"></i>
+                    Remover Cursos Selecionados
+                </button>
+                <button class="btn btn-secondary" id="remove-course-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIwBp15jP3iXCxftfwZuFFO6y2qoFYrNA",
+            authDomain: "allayproject-a9ccc.firebaseapp.com",
+            projectId: "allayproject-a9ccc",
+            storageBucket: "allayproject-a9ccc.firebasestorage.app",
+            messagingSenderId: "712124423347",
+            appId: "1:712124423347:web:557a5d70f9f2a60edde4c6",
+            measurementId: "G-R1E8NRN4R6"
+        };
+
+        // Initialize Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+
+        // Global variables
+        let courses = {};
+        let currentCourse = null;
+        let currentStudentForAssignment = null;
+        let currentStudentForEdit = null; // New variable for student editing
+        let availableCourses = []; // Store available courses for multiple assignment
+
+        // DOM elements
+        const navLinks = document.querySelectorAll(".nav-link");
+        const sections = document.querySelectorAll(".section");
+        const pageTitle = document.getElementById("page-title");
+        const breadcrumbCurrent = document.getElementById("breadcrumb-current");
+        
+        // Course elements
+        const courseNameInput = document.getElementById("course-name-input");
+        const addCourseButton = document.getElementById("add-course-button");
+        const courseSelect = document.getElementById("course-select");
+        const selectCourseButton = document.getElementById("select-course-button");
+        const deleteCourseButton = document.getElementById("delete-course-button");
+        const currentCourseNameSpan = document.getElementById("current-course-name");
+        const modulesContainer = document.getElementById("modules-container");
+        const addModuleButton = document.getElementById("add-module-button");
+        const saveCourseDataButton = document.getElementById("save-course-data");
+        const coursesMessageDiv = document.getElementById("courses-message");
+
+        // Student elements
+        const studentNameInput = document.getElementById("student-name-input");
+        const studentEmailInput = document.getElementById("student-email-input");
+        const studentPasswordInput = document.getElementById("student-password-input");
+        const addStudentButton = document.getElementById("add-student-button");
+        const enrollmentMessageDiv = document.getElementById("enrollment-message");
+        const studentsList = document.getElementById("students-list");
+        const studentsMessageDiv = document.getElementById("students-message");
+
+        // Modal elements
+        const assignCourseModal = document.getElementById("assign-course-modal");
+        const modalStudentName = document.getElementById("modal-student-name");
+        const modalCourseSelect = document.getElementById("modal-course-select");
+        const assignCourseConfirm = document.getElementById("assign-course-confirm");
+        const assignCourseCancel = document.getElementById("assign-course-cancel");
+
+        // Multiple courses modal elements
+        const assignMultipleCoursesModal = document.getElementById("assign-multiple-courses-modal");
+        const modalMultipleStudentName = document.getElementById("modal-multiple-student-name");
+        const multipleCoursesList = document.getElementById("multiple-courses-list");
+        const assignMultipleCoursesConfirm = document.getElementById("assign-multiple-courses-confirm");
+        const assignMultipleCoursesCancel = document.getElementById("assign-multiple-courses-cancel");
+
+        // Edit student modal elements
+        const editStudentModal = document.getElementById("edit-student-modal");
+        const editModalStudentEmail = document.getElementById("edit-modal-student-email");
+        const editStudentName = document.getElementById("edit-student-name");
+        const editStudentEmail = document.getElementById("edit-student-email");
+        const editStudentPassword = document.getElementById("edit-student-password");
+        const editStudentConfirm = document.getElementById("edit-student-confirm");
+        const editStudentCancel = document.getElementById("edit-student-cancel");
+
+        // Remove course modal elements
+        const removeCourseModal = document.getElementById("remove-course-modal");
+        const removeModalStudentName = document.getElementById("remove-modal-student-name");
+        const removeCoursesList = document.getElementById("remove-courses-list");
+        const removeCourseConfirm = document.getElementById("remove-course-confirm");
+        const removeCourseCancel = document.getElementById("remove-course-cancel");
+        let currentStudentForRemoval = null;
+
+        // Navigation
+        navLinks.forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                const targetSection = link.getAttribute("data-section");
+                
+                // Update active nav link
+                navLinks.forEach(l => l.classList.remove("active"));
+                link.classList.add("active");
+                
+                // Update page title and breadcrumb
+                const sectionTitles = {
+                    dashboard: "Dashboard",
+                    courses: "Gerenciar Cursos",
+                    enrollment: "Matrícula de Aluno",
+                    students: "Gerenciar Alunos",
+                    settings: "Configurações",
+                    analytics: "Relatórios"
+                };
+                
+                pageTitle.textContent = sectionTitles[targetSection];
+                breadcrumbCurrent.textContent = sectionTitles[targetSection];
+                
+                // Show target section
+                sections.forEach(section => {
+                    section.classList.remove("active");
+                });
+                document.getElementById(targetSection).classList.add("active");
+                
+                // Load data for specific sections
+                if (targetSection === "students") {
+                    loadStudents();
+                } else if (targetSection === "dashboard") {
+                    updateDashboardStats();
+                }
+            });
+        });
+
+        // Course management functions
+        async function loadCourses() {
+            try {
+                const coursesSnapshot = await getDocs(collection(firestore, "courses"));
+                courseSelect.innerHTML = '<option value="">Escolha um curso...</option>';
+                modalCourseSelect.innerHTML = '<option value="">Escolha um curso...</option>';
+                
+                // Clear and populate available courses array
+                availableCourses = [];
+                
+                coursesSnapshot.forEach((doc) => {
+                    const courseName = doc.id;
+                    availableCourses.push(courseName);
+                    
+                    const option = document.createElement("option");
+                    option.value = courseName;
+                    option.textContent = courseName;
+                    courseSelect.appendChild(option);
+                    
+                    const modalOption = option.cloneNode(true);
+                    modalCourseSelect.appendChild(modalOption);
+                });
+                
+                // Update multiple courses modal
+                updateMultipleCoursesModal();
+            } catch (error) {
+                console.error("Erro ao carregar cursos:", error);
+            }
+        }
+
+        function updateMultipleCoursesModal() {
+            multipleCoursesList.innerHTML = "";
+            
+            if (availableCourses.length === 0) {
+                multipleCoursesList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: var(--spacing-lg);">Nenhum curso disponível.</p>';
+                return;
+            }
+            
+            availableCourses.forEach((courseName) => {
+                const checkboxItem = document.createElement("div");
+                checkboxItem.className = "course-checkbox-item";
+                checkboxItem.innerHTML = `
+                    <input type="checkbox" id="course-${courseName}" value="${courseName}" onchange="toggleCourseCheckbox(this)">
+                    <label for="course-${courseName}" class="course-checkbox-label">${courseName}</label>
+                `;
+                multipleCoursesList.appendChild(checkboxItem);
+            });
+        }
+
+        function toggleCourseCheckbox(checkbox) {
+            const item = checkbox.closest('.course-checkbox-item');
+            if (checkbox.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+        }
+
+        async function addCourse() {
+            const courseName = courseNameInput.value.trim();
+            if (!courseName) {
+                showMessage(coursesMessageDiv, "Por favor, insira um nome para o curso.", "error");
+                return;
+            }
+
+            try {
+                await setDoc(doc(firestore, "courses", courseName), {
+                    modules: []
+                });
+                
+                courseNameInput.value = "";
+                showMessage(coursesMessageDiv, "Curso criado com sucesso!", "success");
+                loadCourses();
+            } catch (error) {
+                console.error("Erro ao criar curso:", error);
+                showMessage(coursesMessageDiv, "Erro ao criar curso. Tente novamente.", "error");
+            }
+        }
+
+        async function selectCourse() {
+            const selectedCourse = courseSelect.value;
+            if (!selectedCourse) {
+                showMessage(coursesMessageDiv, "Por favor, selecione um curso.", "error");
+                return;
+            }
+
+            try {
+                const courseDoc = await getDoc(doc(firestore, "courses", selectedCourse));
+                if (courseDoc.exists()) {
+                    currentCourse = selectedCourse;
+                    currentCourseNameSpan.textContent = selectedCourse;
+                    
+                    const courseData = courseDoc.data();
+                    courses[selectedCourse] = courseData.modules || [];
+                    
+                    renderModules();
+                    showMessage(coursesMessageDiv, "Curso carregado com sucesso!", "success");
+                } else {
+                    showMessage(coursesMessageDiv, "Curso não encontrado.", "error");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar curso:", error);
+                showMessage(coursesMessageDiv, "Erro ao carregar curso. Tente novamente.", "error");
+            }
+        }
+
+        async function deleteCourse() {
+            const selectedCourse = courseSelect.value;
+            if (!selectedCourse) {
+                showMessage(coursesMessageDiv, "Por favor, selecione um curso.", "error");
+                return;
+            }
+
+            if (confirm(`Tem certeza que deseja excluir o curso "${selectedCourse}"? Esta ação não pode ser desfeita.`)) {
+                try {
+                    await deleteDoc(doc(firestore, "courses", selectedCourse));
+                    
+                    courseSelect.value = "";
+                    currentCourse = null;
+                    currentCourseNameSpan.textContent = "Nenhum Curso Selecionado";
+                    modulesContainer.innerHTML = "";
+                    
+                    showMessage(coursesMessageDiv, "Curso excluído com sucesso!", "success");
+                    loadCourses();
+                } catch (error) {
+                    console.error("Erro ao excluir curso:", error);
+                    showMessage(coursesMessageDiv, "Erro ao excluir curso. Tente novamente.", "error");
+                }
+            }
+        }
+
+        function addModule() {
+            if (!currentCourse) {
+                showMessage(coursesMessageDiv, "Por favor, selecione um curso primeiro.", "error");
+                return;
+            }
+
+            if (!courses[currentCourse]) {
+                courses[currentCourse] = [];
+            }
+
+            const moduleIndex = courses[currentCourse].length;
+            const newModule = {
+                name: `Módulo ${moduleIndex + 1}`,
+                videos: []
+            };
+
+            courses[currentCourse].push(newModule);
+            renderModules();
+        }
+
+        function renderModules() {
+            if (!currentCourse || !courses[currentCourse]) {
+                modulesContainer.innerHTML = "";
+                return;
+            }
+
+            modulesContainer.innerHTML = "";
+            
+            courses[currentCourse].forEach((module, moduleIndex) => {
+                const moduleDiv = document.createElement("div");
+                moduleDiv.className = "module-container";
+                moduleDiv.innerHTML = `
+                    <div class="module-header">
+                        <div class="module-title">
+                            <i class="fas fa-folder"></i>
+                            <input type="text" value="${module.name}" class="form-input" style="max-width: 300px; margin: 0;" onchange="updateModuleName(${moduleIndex}, this.value)">
+                        </div>
+                        <div class="module-actions">
+                            <button class="btn btn-sm btn-primary" onclick="addVideo(${moduleIndex})">
+                                <i class="fas fa-plus"></i>
+                                Adicionar Vídeo
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="removeModule(${moduleIndex})">
+                                <i class="fas fa-trash"></i>
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <div id="videos-${moduleIndex}">
+                            ${renderVideos(module.videos, moduleIndex)}
+                        </div>
+                    </div>
+                `;
+                modulesContainer.appendChild(moduleDiv);
+            });
+        }
+
+        function renderVideos(videos, moduleIndex) {
+            return videos.map((video, videoIndex) => `
+                <div class="video-item">
+                    <input type="text" value="${video.title}" class="form-input video-title-input" placeholder="Título do vídeo" onchange="updateVideoTitle(${moduleIndex}, ${videoIndex}, this.value)">
+                    <input type="url" value="${video.url}" class="form-input video-url-input" placeholder="URL do vídeo" onchange="updateVideoUrl(${moduleIndex}, ${videoIndex}, this.value)">
+                    <button class="btn btn-sm btn-danger" onclick="removeVideo(${moduleIndex}, ${videoIndex})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join("");
+        }
+
+        function addVideo(moduleIndex) {
+            if (!courses[currentCourse][moduleIndex].videos) {
+                courses[currentCourse][moduleIndex].videos = [];
+            }
+            
+            courses[currentCourse][moduleIndex].videos.push({
+                title: "",
+                url: ""
+            });
+            
+            renderModules();
+        }
+
+        function removeModule(moduleIndex) {
+            if (confirm("Tem certeza que deseja remover este módulo?")) {
+                courses[currentCourse].splice(moduleIndex, 1);
+                renderModules();
+            }
+        }
+
+        function removeVideo(moduleIndex, videoIndex) {
+            courses[currentCourse][moduleIndex].videos.splice(videoIndex, 1);
+            renderModules();
+        }
+
+        function updateModuleName(moduleIndex, newName) {
+            courses[currentCourse][moduleIndex].name = newName;
+        }
+
+        function updateVideoTitle(moduleIndex, videoIndex, newTitle) {
+            courses[currentCourse][moduleIndex].videos[videoIndex].title = newTitle;
+        }
+
+        function updateVideoUrl(moduleIndex, videoIndex, newUrl) {
+            courses[currentCourse][moduleIndex].videos[videoIndex].url = newUrl;
+        }
+
+        async function saveCourseData() {
+            if (!currentCourse) {
+                showMessage(coursesMessageDiv, "Nenhum curso selecionado.", "error");
+                return;
+            }
+
+            try {
+                await setDoc(doc(firestore, "courses", currentCourse), {
+                    modules: courses[currentCourse]
+                });
+                
+                showMessage(coursesMessageDiv, "Curso salvo com sucesso!", "success");
+            } catch (error) {
+                console.error("Erro ao salvar curso:", error);
+                showMessage(coursesMessageDiv, "Erro ao salvar curso. Tente novamente.", "error");
+            }
+        }
+
+        // Student management functions
+        async function addStudent() {
+            const name = studentNameInput.value.trim();
+            const email = studentEmailInput.value.trim();
+            const password = studentPasswordInput.value.trim();
+
+            if (!name || !email || !password) {
+                showMessage(enrollmentMessageDiv, "Por favor, preencha todos os campos.", "error");
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage(enrollmentMessageDiv, "A senha deve ter pelo menos 6 caracteres.", "error");
+                return;
+            }
+
+            try {
+                // Create user in Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Save student data to Firestore with an empty assignedCourses array
+                await setDoc(doc(firestore, "students", user.email), {
+                    name: name,
+                    email: email,
+                    assignedCourses: [] // Initialize with an empty array
+                });
+
+                studentNameInput.value = "";
+                studentEmailInput.value = "";
+                studentPasswordInput.value = "";
+                
+                showMessage(enrollmentMessageDiv, "Aluno cadastrado com sucesso!", "success");
+                loadStudents();
+            } catch (error) {
+                console.error("Erro ao cadastrar aluno:", error);
+                let errorMessage = "Erro ao cadastrar aluno. Tente novamente.";
+                
+                if (error.code === "auth/email-already-in-use") {
+                    errorMessage = "Este email já está em uso.";
+                } else if (error.code === "auth/invalid-email") {
+                    errorMessage = "Email inválido.";
+                } else if (error.code === "auth/weak-password") {
+                    errorMessage = "Senha muito fraca.";
+                }
+                
+                showMessage(enrollmentMessageDiv, errorMessage, "error");
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const studentsSnapshot = await getDocs(collection(firestore, "students"));
+                studentsList.innerHTML = "";
+                
+                if (studentsSnapshot.empty) {
+                    studentsList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: var(--spacing-xl);">Nenhum aluno cadastrado.</p>';
+                    return;
+                }
+                
+                studentsSnapshot.forEach((doc) => {
+                    const student = doc.data();
+                    
+                    // Handle both old (assignedCourse) and new (assignedCourses) data structures
+                    let assignedCourses = [];
+                    if (student.assignedCourses && Array.isArray(student.assignedCourses)) {
+                        assignedCourses = student.assignedCourses;
+                    } else if (student.assignedCourse && student.assignedCourse !== "") {
+                        assignedCourses = [student.assignedCourse];
+                    }
+                    
+                    const coursesDisplay = assignedCourses.length > 0 
+                        ? `Cursos: ${assignedCourses.join(', ')}` 
+                        : 'Nenhum curso atribuído';
+                    
+                    // Check if student is disabled
+                    const isDisabled = student.status === "desativado";
+                    const statusDisplay = isDisabled ? " (DESATIVADO)" : "";
+                    const studentNameClass = isDisabled ? "student-name disabled" : "student-name";
+                    
+                    const studentDiv = document.createElement("div");
+                    studentDiv.className = isDisabled ? "student-item disabled" : "student-item";
+                    studentDiv.innerHTML = `
+                        <div class="student-info">
+                            <div class="${studentNameClass}">${student.name}${statusDisplay}</div>
+                            <div class="student-email">${student.email}</div>
+                            <div class="student-course">
+                                ${coursesDisplay}
+                            </div>
+                        </div>
+                        <div class="student-actions">
+                            <button class="btn btn-sm btn-warning" onclick="openEditStudentModal('${student.email}', '${student.name}')" ${isDisabled ? 'disabled' : ''}>
+                                <i class="fas fa-edit"></i>
+                                Editar
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="openAssignCourseModal('${student.email}', '${student.name}')" ${isDisabled ? 'disabled' : ''}>
+                                <i class="fas fa-book"></i>
+                                Atribuir Curso
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="openAssignMultipleCoursesModal('${student.email}', '${student.name}')" ${isDisabled ? 'disabled' : ''}>
+                                <i class="fas fa-plus-circle"></i>
+                                Múltiplos Cursos
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="openRemoveCourseModal('${student.email}', '${student.name}')" ${isDisabled ? 'disabled' : ''}>
+                                <i class="fas fa-minus-circle"></i>
+                                Remover Curso
+                            </button>
+                            <button class="btn btn-sm ${isDisabled ? 'btn-success' : 'btn-danger'}" onclick="${isDisabled ? 'reactivateStudent' : 'removeStudent'}('${student.email}')">
+                                <i class="fas fa-${isDisabled ? 'check' : 'trash'}"></i>
+                                ${isDisabled ? 'Reativar' : 'Remover'}
+                            </button>
+                        </div>
+                    `;
+                    studentsList.appendChild(studentDiv);
+                });
+            } catch (error) {
+                console.error("Erro ao carregar alunos:", error);
+                showMessage(studentsMessageDiv, "Erro ao carregar lista de alunos.", "error");
+            }
+        }
+
+        function openAssignCourseModal(studentEmail, studentName) {
+            currentStudentForAssignment = studentEmail;
+            modalStudentName.textContent = studentName;
+            assignCourseModal.style.display = "flex";
+        }
+
+        function openAssignMultipleCoursesModal(studentEmail, studentName) {
+            currentStudentForAssignment = studentEmail;
+            modalMultipleStudentName.textContent = studentName;
+            
+            // Clear all checkboxes
+            const checkboxes = multipleCoursesList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.course-checkbox-item').classList.remove('checked');
+            });
+            
+            assignMultipleCoursesModal.style.display = "flex";
+        }
+
+        function closeAssignCourseModal() {
+            assignCourseModal.style.display = "none";
+            currentStudentForAssignment = null;
+            modalCourseSelect.value = "";
+        }
+
+        function closeAssignMultipleCoursesModal() {
+            assignMultipleCoursesModal.style.display = "none";
+            currentStudentForAssignment = null;
+            
+            // Clear all checkboxes
+            const checkboxes = multipleCoursesList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.course-checkbox-item').classList.remove('checked');
+            });
+        }
+
+        async function assignCourse() {
+            const selectedCourse = modalCourseSelect.value;
+            if (!selectedCourse || !currentStudentForAssignment) {
+                return;
+            }
+
+            try {
+                // Get current student data
+                const studentDoc = await getDoc(doc(firestore, "students", currentStudentForAssignment));
+                if (!studentDoc.exists()) {
+                    showMessage(studentsMessageDiv, "Aluno não encontrado.", "error");
+                    return;
+                }
+
+                const studentData = studentDoc.data();
+                let assignedCourses = [];
+                
+                // Handle both old and new data structures
+                if (studentData.assignedCourses && Array.isArray(studentData.assignedCourses)) {
+                    assignedCourses = [...studentData.assignedCourses];
+                } else if (studentData.assignedCourse && studentData.assignedCourse !== "") {
+                    assignedCourses = [studentData.assignedCourse];
+                }
+                
+                // Add new course if not already assigned
+                if (!assignedCourses.includes(selectedCourse)) {
+                    assignedCourses.push(selectedCourse);
+                }
+                
+                await setDoc(doc(firestore, "students", currentStudentForAssignment), {
+                    ...studentData,
+                    assignedCourses: assignedCourses
+                }, { merge: true });
+                
+                closeAssignCourseModal();
+                loadStudents();
+                showMessage(studentsMessageDiv, "Curso atribuído com sucesso!", "success");
+            } catch (error) {
+                console.error("Erro ao atribuir curso:", error);
+                showMessage(studentsMessageDiv, "Erro ao atribuir curso. Tente novamente.", "error");
+            }
+        }
+
+        async function assignMultipleCourses() {
+            if (!currentStudentForAssignment) {
+                return;
+            }
+
+            // Get selected courses
+            const checkboxes = multipleCoursesList.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedCourses = Array.from(checkboxes).map(checkbox => checkbox.value);
+            
+            if (selectedCourses.length === 0) {
+                showMessage(studentsMessageDiv, "Por favor, selecione pelo menos um curso.", "error");
+                return;
+            }
+
+            try {
+                // Get current student data
+                const studentDoc = await getDoc(doc(firestore, "students", currentStudentForAssignment));
+                if (!studentDoc.exists()) {
+                    showMessage(studentsMessageDiv, "Aluno não encontrado.", "error");
+                    return;
+                }
+
+                const studentData = studentDoc.data();
+                let assignedCourses = [];
+                
+                // Handle both old and new data structures
+                if (studentData.assignedCourses && Array.isArray(studentData.assignedCourses)) {
+                    assignedCourses = [...studentData.assignedCourses];
+                } else if (studentData.assignedCourse && studentData.assignedCourse !== "") {
+                    assignedCourses = [studentData.assignedCourse];
+                }
+                
+                // Add new courses if not already assigned
+                selectedCourses.forEach(course => {
+                    if (!assignedCourses.includes(course)) {
+                        assignedCourses.push(course);
+                    }
+                });
+                
+                await setDoc(doc(firestore, "students", currentStudentForAssignment), {
+                    ...studentData,
+                    assignedCourses: assignedCourses
+                }, { merge: true });
+                
+                closeAssignMultipleCoursesModal();
+                loadStudents();
+                showMessage(studentsMessageDiv, `${selectedCourses.length} curso(s) atribuído(s) com sucesso!`, "success");
+            } catch (error) {
+                console.error("Erro ao atribuir cursos:", error);
+                showMessage(studentsMessageDiv, "Erro ao atribuir cursos. Tente novamente.", "error");
+            }
+        }
+
+        async function removeStudent(studentEmail) {
+            if (confirm(`Tem certeza que deseja desativar o aluno ${studentEmail}? O aluno não conseguirá mais fazer login.`)) {
+                try {
+                    // Obter o token de autenticação do usuário atual
+                    const user = auth.currentUser;
+                    if (!user) {
+                        showMessage(studentsMessageDiv, "Você precisa estar logado para realizar esta operação.", "error");
+                        return;
+                    }
+
+                    const idToken = await user.getIdToken();
+
+                    // Mostrar mensagem de carregamento
+                    showMessage(studentsMessageDiv, "Desativando aluno...", "warning");
+
+                    // Fazer requisição HTTP para a Cloud Function para desativar o usuário
+                    const response = await fetch('https://us-central1-allayproject-a9ccc.cloudfunctions.net/disableUser', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userEmail: studentEmail,
+                            idToken: idToken
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        // Atualizar o status do aluno no Firestore
+                        await setDoc(doc(firestore, "students", studentEmail), {
+                            status: "desativado",
+                            disabledAt: new Date().toISOString()
+                        }, { merge: true });
+
+                        loadStudents();
+                        showMessage(studentsMessageDiv, "Aluno desativado com sucesso!", "success");
+                    } else {
+                        // Tratar erros retornados pela Cloud Function
+                        let errorMessage = result.error || "Erro ao desativar aluno.";
+                        
+                        // Mapear códigos de erro para mensagens mais amigáveis
+                        switch (result.code) {
+                            case 'unauthenticated':
+                                errorMessage = "Você precisa estar autenticado para realizar esta operação.";
+                                break;
+                            case 'permission-denied':
+                                errorMessage = "Você não tem permissão para realizar esta operação.";
+                                break;
+                            case 'not-found':
+                                errorMessage = "Usuário não encontrado no sistema de autenticação.";
+                                break;
+                            case 'internal':
+                                errorMessage = "Erro interno do servidor. Tente novamente mais tarde.";
+                                break;
+                        }
+                        
+                        showMessage(studentsMessageDiv, errorMessage, "error");
+                    }
+
+                } catch (error) {
+                    console.error("Erro ao desativar aluno:", error);
+                    
+                    let errorMessage = "Erro ao desativar aluno. Tente novamente.";
+                    
+                    // Tratar erros de rede
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+                    } else if (error.name === 'SyntaxError') {
+                        errorMessage = "Erro na resposta do servidor. Tente novamente.";
+                    }
+                    
+                    showMessage(studentsMessageDiv, errorMessage, "error");
+                }
+            }
+        }
+
+        async function reactivateStudent(studentEmail) {
+            if (confirm(`Tem certeza que deseja reativar o aluno ${studentEmail}? O aluno poderá fazer login novamente.`)) {
+                try {
+                    // Obter o token de autenticação do usuário atual
+                    const user = auth.currentUser;
+                    if (!user) {
+                        showMessage(studentsMessageDiv, "Você precisa estar logado para realizar esta operação.", "error");
+                        return;
+                    }
+
+                    const idToken = await user.getIdToken();
+
+                    // Mostrar mensagem de carregamento
+                    showMessage(studentsMessageDiv, "Reativando aluno...", "warning");
+
+                    // Fazer requisição HTTP para a Cloud Function para reativar o usuário
+                    const response = await fetch('https://us-central1-allayproject-a9ccc.cloudfunctions.net/enableUser', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userEmail: studentEmail,
+                            idToken: idToken
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        // Atualizar o status do aluno no Firestore
+                        await setDoc(doc(firestore, "students", studentEmail), {
+                            status: "ativo",
+                            reactivatedAt: new Date().toISOString()
+                        }, { merge: true });
+
+                        loadStudents();
+                        showMessage(studentsMessageDiv, "Aluno reativado com sucesso!", "success");
+                    } else {
+                        // Tratar erros retornados pela Cloud Function
+                        let errorMessage = result.error || "Erro ao reativar aluno.";
+                        
+                        // Mapear códigos de erro para mensagens mais amigáveis
+                        switch (result.code) {
+                            case 'unauthenticated':
+                                errorMessage = "Você precisa estar autenticado para realizar esta operação.";
+                                break;
+                            case 'permission-denied':
+                                errorMessage = "Você não tem permissão para realizar esta operação.";
+                                break;
+                            case 'not-found':
+                                errorMessage = "Usuário não encontrado no sistema de autenticação.";
+                                break;
+                            case 'internal':
+                                errorMessage = "Erro interno do servidor. Tente novamente mais tarde.";
+                                break;
+                        }
+                        
+                        showMessage(studentsMessageDiv, errorMessage, "error");
+                    }
+
+                } catch (error) {
+                    console.error("Erro ao reativar aluno:", error);
+                    
+                    let errorMessage = "Erro ao reativar aluno. Tente novamente.";
+                    
+                    // Tratar erros de rede
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+                    } else if (error.name === 'SyntaxError') {
+                        errorMessage = "Erro na resposta do servidor. Tente novamente.";
+                    }
+                    
+                    showMessage(studentsMessageDiv, errorMessage, "error");
+                }
+            }
+        }
+
+        // Student edit functions
+        async function openEditStudentModal(studentEmail, studentName) {
+            try {
+                // Get current student data
+                const studentDoc = await getDoc(doc(firestore, "students", studentEmail));
+                if (!studentDoc.exists()) {
+                    showMessage(studentsMessageDiv, "Aluno não encontrado.", "error");
+                    return;
+                }
+
+                const studentData = studentDoc.data();
+                currentStudentForEdit = studentEmail;
+                
+                // Populate modal fields
+                editModalStudentEmail.textContent = studentEmail;
+                editStudentName.value = studentData.name || "";
+                editStudentEmail.value = studentData.email || "";
+                editStudentPassword.value = ""; // Always start empty for security
+                
+                editStudentModal.style.display = "flex";
+            } catch (error) {
+                console.error("Erro ao carregar dados do aluno:", error);
+                showMessage(studentsMessageDiv, "Erro ao carregar dados do aluno.", "error");
+            }
+        }
+
+        function closeEditStudentModal() {
+            editStudentModal.style.display = "none";
+            currentStudentForEdit = null;
+            
+            // Clear form fields
+            editStudentName.value = "";
+            editStudentEmail.value = "";
+            editStudentPassword.value = "";
+        }
+
+        async function editStudent() {
+            if (!currentStudentForEdit) {
+                return;
+            }
+
+            const newName = editStudentName.value.trim();
+            const newEmail = editStudentEmail.value.trim();
+            const newPassword = editStudentPassword.value.trim();
+
+            if (!newName || !newEmail) {
+                showMessage(studentsMessageDiv, "Nome e email são obrigatórios.", "error");
+                return;
+            }
+
+            if (newPassword && newPassword.length < 6) {
+                showMessage(studentsMessageDiv, "A nova senha deve ter pelo menos 6 caracteres.", "error");
+                return;
+            }
+
+            try {
+                // Obter o token de autenticação do usuário atual
+                const user = auth.currentUser;
+                if (!user) {
+                    showMessage(studentsMessageDiv, "Você precisa estar logado para realizar esta operação.", "error");
+                    return;
+                }
+
+                const idToken = await user.getIdToken();
+
+                // Preparar dados para a requisição
+                const requestData = {
+                    studentEmail: currentStudentForEdit,
+                    newName: newName,
+                    newEmail: newEmail,
+                    idToken: idToken
+                };
+
+                // Incluir senha apenas se foi fornecida
+                if (newPassword) {
+                    requestData.newPassword = newPassword;
+                }
+
+                // Mostrar mensagem de carregamento
+                showMessage(studentsMessageDiv, "Atualizando dados do aluno...", "warning");
+
+                // Fazer requisição HTTP para a Cloud Function
+                const response = await fetch('https://us-central1-allayproject-a9ccc.cloudfunctions.net/editStudentData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    closeEditStudentModal();
+                    loadStudents();
+                    showMessage(studentsMessageDiv, result.message, "success");
+                } else {
+                    // Tratar erros retornados pela Cloud Function
+                    let errorMessage = result.error || "Erro ao atualizar dados do aluno.";
+                    
+                    // Mapear códigos de erro para mensagens mais amigáveis
+                    switch (result.code) {
+                        case 'unauthenticated':
+                            errorMessage = "Você precisa estar autenticado para realizar esta operação.";
+                            break;
+                        case 'permission-denied':
+                            errorMessage = "Você não tem permissão para realizar esta operação.";
+                            break;
+                        case 'not-found':
+                            errorMessage = "Aluno não encontrado.";
+                            break;
+                        case 'already-exists':
+                            errorMessage = "O novo email já está em uso por outra conta.";
+                            break;
+                        case 'invalid-argument':
+                            errorMessage = result.error || "Dados inválidos fornecidos.";
+                            break;
+                        case 'internal':
+                            errorMessage = "Erro interno do servidor. Tente novamente mais tarde.";
+                            break;
+                    }
+                    
+                    showMessage(studentsMessageDiv, errorMessage, "error");
+                }
+
+            } catch (error) {
+                console.error("Erro ao chamar Cloud Function:", error);
+                
+                let errorMessage = "Erro ao editar aluno. Tente novamente.";
+                
+                // Tratar erros de rede
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+                } else if (error.name === 'SyntaxError') {
+                    errorMessage = "Erro na resposta do servidor. Tente novamente.";
+                }
+                
+                showMessage(studentsMessageDiv, errorMessage, "error");
+            }
+        }
+
+        // Remove course functions
+        async function openRemoveCourseModal(studentEmail, studentName) {
+            try {
+                // Get current student data
+                const studentDoc = await getDoc(doc(firestore, "students", studentEmail));
+                if (!studentDoc.exists()) {
+                    showMessage(studentsMessageDiv, "Aluno não encontrado.", "error");
+                    return;
+                }
+
+                const studentData = studentDoc.data();
+                let assignedCourses = [];
+                
+                // Handle both old and new data structures
+                if (studentData.assignedCourses && Array.isArray(studentData.assignedCourses)) {
+                    assignedCourses = studentData.assignedCourses;
+                } else if (studentData.assignedCourse && studentData.assignedCourse !== "") {
+                    assignedCourses = [studentData.assignedCourse];
+                }
+
+                if (assignedCourses.length === 0) {
+                    showMessage(studentsMessageDiv, "Este aluno não possui cursos atribuídos.", "error");
+                    return;
+                }
+
+                currentStudentForRemoval = studentEmail;
+                removeModalStudentName.textContent = studentName;
+                
+                // Populate courses list
+                updateRemoveCoursesModal(assignedCourses);
+                
+                removeCourseModal.style.display = "flex";
+            } catch (error) {
+                console.error("Erro ao carregar dados do aluno:", error);
+                showMessage(studentsMessageDiv, "Erro ao carregar dados do aluno.", "error");
+            }
+        }
+
+        function updateRemoveCoursesModal(assignedCourses) {
+            removeCoursesList.innerHTML = "";
+            
+            if (assignedCourses.length === 0) {
+                removeCoursesList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: var(--spacing-lg);">Nenhum curso atribuído.</p>';
+                return;
+            }
+            
+            assignedCourses.forEach((courseName) => {
+                const checkboxItem = document.createElement("div");
+                checkboxItem.className = "course-checkbox-item";
+                checkboxItem.innerHTML = `
+                    <input type="checkbox" id="remove-course-${courseName}" value="${courseName}" onchange="toggleRemoveCourseCheckbox(this)">
+                    <label for="remove-course-${courseName}" class="course-checkbox-label">${courseName}</label>
+                `;
+                removeCoursesList.appendChild(checkboxItem);
+            });
+        }
+
+        function toggleRemoveCourseCheckbox(checkbox) {
+            const item = checkbox.closest('.course-checkbox-item');
+            if (checkbox.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+        }
+
+        function closeRemoveCourseModal() {
+            removeCourseModal.style.display = "none";
+            currentStudentForRemoval = null;
+            
+            // Clear all checkboxes
+            const checkboxes = removeCoursesList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.course-checkbox-item').classList.remove('checked');
+            });
+        }
+
+        async function removeCourseFromStudent() {
+            if (!currentStudentForRemoval) {
+                return;
+            }
+
+            // Get selected courses to remove
+            const checkboxes = removeCoursesList.querySelectorAll('input[type="checkbox"]:checked');
+            const coursesToRemove = Array.from(checkboxes).map(checkbox => checkbox.value);
+            
+            if (coursesToRemove.length === 0) {
+                showMessage(studentsMessageDiv, "Por favor, selecione pelo menos um curso para remover.", "error");
+                return;
+            }
+
+            if (!confirm(`Tem certeza que deseja remover ${coursesToRemove.length} curso(s) do aluno? Esta ação não pode ser desfeita.`)) {
+                return;
+            }
+
+            try {
+                // Get current student data
+                const studentDoc = await getDoc(doc(firestore, "students", currentStudentForRemoval));
+                if (!studentDoc.exists()) {
+                    showMessage(studentsMessageDiv, "Aluno não encontrado.", "error");
+                    return;
+                }
+
+                const studentData = studentDoc.data();
+                let assignedCourses = [];
+                
+                // Handle both old and new data structures
+                if (studentData.assignedCourses && Array.isArray(studentData.assignedCourses)) {
+                    assignedCourses = [...studentData.assignedCourses];
+                } else if (studentData.assignedCourse && studentData.assignedCourse !== "") {
+                    assignedCourses = [studentData.assignedCourse];
+                }
+                
+                // Remove selected courses
+                const updatedCourses = assignedCourses.filter(course => !coursesToRemove.includes(course));
+                
+                // Update student data in Firebase
+                await setDoc(doc(firestore, "students", currentStudentForRemoval), {
+                    ...studentData,
+                    assignedCourses: updatedCourses,
+                    assignedCourse: "" // Clear old single course field
+                }, { merge: true });
+                
+                closeRemoveCourseModal();
+                loadStudents();
+                showMessage(studentsMessageDiv, `${coursesToRemove.length} curso(s) removido(s) com sucesso!`, "success");
+            } catch (error) {
+                console.error("Erro ao remover cursos:", error);
+                showMessage(studentsMessageDiv, "Erro ao remover cursos. Tente novamente.", "error");
+            }
+        }
+
+        // Dashboard stats
+        async function updateDashboardStats() {
+            try {
+                // Count courses
+                const coursesSnapshot = await getDocs(collection(firestore, "courses"));
+                document.getElementById("total-courses").textContent = coursesSnapshot.size;
+                
+                // Count students
+                const studentsSnapshot = await getDocs(collection(firestore, "students"));
+                document.getElementById("total-students").textContent = studentsSnapshot.size;
+                
+                // Count total videos
+                let totalVideos = 0;
+                coursesSnapshot.forEach((doc) => {
+                    const courseData = doc.data();
+                    if (courseData.modules) {
+                        courseData.modules.forEach(module => {
+                            if (module.videos) {
+                                totalVideos += module.videos.length;
+                            }
+                        });
+                    }
+                });
+                document.getElementById("total-videos").textContent = totalVideos;
+            } catch (error) {
+                console.error("Erro ao atualizar estatísticas:", error);
+            }
+        }
+
+        // Utility functions
+        function showMessage(element, message, type) {
+            element.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+            element.className = `message ${type}`;
+            element.style.display = "flex";
+            
+            setTimeout(() => {
+                element.style.display = "none";
+            }, 5000);
+        }
+
+        // Event listeners
+        addCourseButton.addEventListener("click", addCourse);
+        selectCourseButton.addEventListener("click", selectCourse);
+        deleteCourseButton.addEventListener("click", deleteCourse);
+        addModuleButton.addEventListener("click", addModule);
+        saveCourseDataButton.addEventListener("click", saveCourseData);
+        addStudentButton.addEventListener("click", addStudent);
+        assignCourseConfirm.addEventListener("click", assignCourse);
+        assignCourseCancel.addEventListener("click", closeAssignCourseModal);
+        assignMultipleCoursesConfirm.addEventListener("click", assignMultipleCourses);
+        assignMultipleCoursesCancel.addEventListener("click", closeAssignMultipleCoursesModal);
+        editStudentConfirm.addEventListener("click", editStudent);
+        editStudentCancel.addEventListener("click", closeEditStudentModal);
+        removeCourseConfirm.addEventListener("click", removeCourseFromStudent);
+        removeCourseCancel.addEventListener("click", closeRemoveCourseModal);
+
+        // Make functions global for onclick handlers
+        window.addVideo = addVideo;
+        window.removeModule = removeModule;
+        window.removeVideo = removeVideo;
+        window.updateModuleName = updateModuleName;
+        window.updateVideoTitle = updateVideoTitle;
+        window.updateVideoUrl = updateVideoUrl;
+        window.openAssignCourseModal = openAssignCourseModal;
+        window.openAssignMultipleCoursesModal = openAssignMultipleCoursesModal;
+        window.openEditStudentModal = openEditStudentModal;
+        window.openRemoveCourseModal = openRemoveCourseModal;
+        window.removeStudent = removeStudent;
+        window.reactivateStudent = reactivateStudent;
+        window.loadStudents = loadStudents;
+        window.toggleCourseCheckbox = toggleCourseCheckbox;
+        window.toggleRemoveCourseCheckbox = toggleRemoveCourseCheckbox;
+        window.removeCourseFromStudent = removeCourseFromStudent;
+
+        // Initialize
+        loadCourses();
+        updateDashboardStats();
+    </script>
+</body>
+</html>
+
